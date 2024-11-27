@@ -1,0 +1,298 @@
+---
+title: "Maximum Likelihood Estimation"
+jupyter: python3
+---
+
+Generally, the steps involved in estimating a model involves choosing some values of the model's parameters so that the model matches some of the properties of our data. These estimation procedures may be broadly classified by the criteria in which these model parameters are chosen. For example, ordinary least squares (OLS) broadly refers to a class of estimation strategies that minimizes the sum of squared errors. 
+
+In this section, we discuss maximum likelihood estimation, one of the most commonly used methods in structural estimation. The basic intuition of maximum likelihood estimation is that it essentially chooses parameters of a model by maximizing a "likelihood function". A primary reason why this method is often used in structural estimation is that it is more flexible than other methods, such as ordinary least squares (OLS) regression. This method can be used particularly to estimate parameters in nonlinear models. Although MLE requires stronger distributional assumptions than OLS, when these assumptions hold, the maximum likelihood estimator is consistent and efficient.
+
+Let us briefly review the distinction between *probability* and *likelihood*. Although in standard English these words hold identical meaning, there is a clear distinction in mathematics. The term *probability* corresponds to finding the chance of something given a sample distribution of the data. On the other hand, the term *likelihood* refers to finding the best distribution of the data, given a particular value of some feature of the data. 
+
+To make things more concrete, let us consider the following scenario. Let's say we were given 5 random values, $y = \{38, 24, 56, 52, 72\}$ drawn from some unknown normal distribution $N(\mu,\sigma)$. We know that these values were drawn by some sort of normal distribution, but we are not exactly sure of the specific parameters (mean $\mu$ and variance $\sigma$) of that distribution. However, we can ask ourselves about the likelihood of these draws being taken from some distribution candidates. What's the *likelihood* that our draws were from the standard normal distribution $N(0,1)$? Practically none. What about the likelihood that our data was drawn from a normal distribution $N(50,2)$? Much more likely. This simple example illustrates the basic intuition of maximum likelihood estimation and the maximum likelihood estimator: we are interested in finding the set of parameters that maximizes the likelihood of having generated the data that we actually observe. 
+
+# Intuition Behind MLE
+
+Maximum likelihood estimation requires a distributional assumption about the underlying data-generating process of the data we observe. A simple example of a model that we will discuss later is a statistical distribution, such as the normal distribution $N(\mu,\sigma)$, which is defined as follows:
+$$
+Pr(x|\theta) = \frac{1}{\sigma \sqrt{2\pi}} e^{- \frac{(x-\mu)^2}{2\sigma^2}}
+$$
+
+Let $f(x_i|\theta)$ denote the probability of drawing a particular value $x_i$ from the distribution $f(x|\theta)$. Additionally, the probability of drawing the vector of two draws $(x_1,x_2)$ from $f(x|\theta)$ is $f(x_1|\theta) \times f(x_2|\theta)$. For the vector of three draws $(x_1,x_2,x_3)$, the probability is  $f(x_1|\theta) \times f(x_2|\theta) \times f(x_3|\theta)$, so on and so forth. We will define the \textbf{likelihood function} of $N$ draws $(x_1,x_2, ..., x_N)$ from the distribution $f(x|\theta)$ as $L$:
+
+$$
+L(x_1,x_2, ..., x_N|\theta) = \prod_{i = 1}^{N} f(x_i|\theta)
+$$
+
+Oftentimes it is usually much easier to use the log likelihood function $\ell=\ln(L)$, which is defined as:
+
+$$
+\ell(x_1,x_2, ..., x_N|\theta) = \sum_{i=1}^{N} \ln(f(x_i|\theta))
+$$
+
+The maximum likelihood estimate, $\hat \theta_{MLE}$, would then be defined from the following estimator:
+$$
+\hat \theta_{MLE} = \arg \max_{\theta} \ln(L(x_1,x_2, ..., x_N|\theta)) = \arg \max_{\theta} \ell (x_1, x_2, ..., x_N|\theta)
+$$
+A necessary condition for maximizing the log-likelihood function is that, at the estimate, the derivative of the log-likelihood function with respect to each parameter must equal zero.
+
+## Example: The Poisson Distribution
+Suppose we have 10 data points drawn from a Poisson distribution. These data points are:
+$$
+	y = \{2, 0, 1, 2, 2, 2, 0, 2, 1, 1\},
+$$ 
+where $f(y|\lambda) = \frac{e^{-\lambda}\lambda^{y_i}}{y_i!}$ represents the probability mass function. From this data, we would like to figure out the parameter $\lambda$. We can use maximum likelihood estimation to estimate the value of the parameter $\lambda$ which maximizes the likelihood of observing $y$. We can define the likelihood function of $\lambda$ conditional on $y$ as the product of the probability mass function of each random draw:
+
+$$
+L(\lambda|y) = \prod_{i=1}^{n} \frac{e^{-\lambda}\lambda^{y_i}}{y_i!} = \frac{e^{-n\lambda}\lambda^{\sum_{i=1}^{n}y_i}}{\prod_{i=1}^{n} y_i!}
+$$
+
+The log of this likelihood function gives us the log-likelihood function:
+$$
+\ell(\lambda|y) = -n\lambda + \ln(\lambda)\sum_{i=1}^{n}y_i - \sum_{i=1}^{n}\ln(y_i!)
+$$
+
+If we take the partial derivative of the log-likelihood function with respect to $\lambda$, we obtain a necessary condition for the maximum likelihood estimate:
+$$
+\frac{\partial \ell(\lambda|y)}{\partial \lambda} = -n + \frac{1}{\lambda}\sum_{i=1}^{n}y_i 
+$$
+
+$$
+0 = -n + \frac{1}{\lambda}\sum_{i=1}^{n}y_i \Rightarrow \hat \lambda = \frac{1}{n}\sum_{i=1}^{n}y_i
+$$
+
+When we plug in our data ($y$), we obtain the result $\hat \lambda = 1.3$. This estimate is the same whether or not we choose to use the likelihood or the log-likelihood function. We can also plot these functions with respect to different values of $\lambda$:
+
+```{python}
+#|code-fold: True
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
+
+# We have a list containing 10 draws from an unknown Poisson distribution:
+y = [2, 0, 1, 2, 2, 2, 0, 2, 1, 1]
+
+# Store the sum of our list:
+sum1 = sum(y)
+
+# Let's create a function that represents the likelihood function:
+    # But first, we need to take the product of factorials:
+product_of_factorials = 1
+for i in y: 
+    f = math.factorial(i)
+    product_of_factorials *= f  
+
+# Now we define our function:
+def likelihood(x):
+    return (1/product_of_factorials)*((np.e**(-10*x)) * (x**(sum1)))
+
+# Using our function, define some points that we can plot:
+likelihood_x_axis = np.linspace(0, 3, 100)
+likelihood_y = likelihood(likelihood_x_axis)
+
+# Find out the maximum of the likelihood function:
+xmax = likelihood_x_axis[np.argmax(likelihood_y)]
+ymax = likelihood_y.max()
+
+# Create our plot:
+plt.plot(likelihood_x_axis, likelihood_y)
+plt.xlabel("Parameter Value (lambda)")
+plt.ylabel("Likelihood")
+
+plt.plot(xmax, ymax, 'o')
+plt.axhline(ymax, ls=':', c='k')
+plt.axvline(xmax, ls=':', c='k')
+plt.text(1.1*xmax, ymax*0.95, f'lambda = {round(xmax,3)}')
+plt.show()
+```
+
+We can also create a function representing the log-likelihood function:
+```{python}
+#|code-fold: True
+# First need to take the sum of log factorials:
+sum_of_log_factorials = 0
+for i in y:
+    factorial = math.factorial(i)
+    sum_of_log_factorials += np.log(factorial)
+ 
+# Now we can define our function:
+    def log_likelihood(x):
+        return -10*x + np.log(x)*sum1 - sum_of_log_factorials
+
+log_likelihood_x_axis = np.linspace(0, 3, 100)
+log_likelihood_y = log_likelihood(log_likelihood_x_axis)
+
+plt.plot(log_likelihood_x_axis, log_likelihood_y)
+plt.xlabel("Parameter Value (lambda)")
+plt.ylabel("Log-Likelihood")
+
+# Find out the maximum of the likelihood function:
+xmax = log_likelihood_x_axis[np.argmax(log_likelihood_y)]
+ymax = log_likelihood_y.max()
+
+# Create our plot:
+plt.plot(log_likelihood_x_axis, log_likelihood_y)
+plt.xlabel("Parameter Value (lambda)")
+plt.ylabel("Log-Likelihood")
+
+plt.plot(xmax, ymax, 'o')
+plt.axhline(ymax, ls=':', c='k')
+plt.axvline(xmax, ls=':', c='k')
+plt.text(1.05*xmax, 1.25*ymax, f'lambda = {round(xmax,3)}')
+plt.show()
+```
+
+
+## Example: Simulated Data from a Normal Distribution
+Let us now consider data points drawn from a normal distribution. Recall that the probability distribution function of the normal distribution is:
+$$
+f(y|\mu,\sigma^2) =  \left(\frac{1}{\sqrt{2\pi\sigma^2}}\right) e^{\frac{-(y-\mu)^2}{2\sigma^2}}
+$$
+
+The likelihood function of $\mu$ and $\sigma^2$, conditional on our data $y$, is the product of the probability distribution function for each random draw:
+$$
+L(\theta|y) = \prod_{i = 1}^{n} f(y|\mu,\sigma^2) = \left(\frac{1}{\sqrt{2\pi\sigma^2}}\right)^n e^{ \left(\frac{-1}{2\sigma^2}\right)\sum_{i=1}^{n}(y_i-\mu)^2 },
+$$
+In this exercise, I generate 200 random draws from some normal distribution. In the data generating process, this distribution has a mean of $\mu = 92$ and standard deviation of $\sigma = 7$. The resulting sample distribution can be seen in the following figure, which we can see is approximately bell-shaped:
+
+```{python}
+#|code-fold: True
+import seaborn as sns
+
+def gen_data(mu=0, sigma=1, n=200):
+    """
+    This function takes n random draws from a normal distribution of mean mu and
+    standard deviation sigma, and returns a list
+    
+    Args:
+        mu (int, optional): Set the mean of normal distribution. Defaults to 0.
+        sigma (int, optional): Set the standard deviation of normal distribution. Defaults to 1.
+        n (int, optional): Set the number of draws. Defaults to 200.
+
+    Returns:
+        lsit: vector of n draws.
+    """
+    data = np.zeros(n)
+    for i in range(n):
+        draw = np.random.normal(loc=mu, scale=sigma)
+        data[i] = draw
+    return data
+
+# Let's set a random seed:  
+np.random.seed(120302)
+
+# and define some parameters:
+mu_true = 92
+sigma_true = 7
+
+X = np.array(gen_data(mu_true, sigma_true))
+
+# Visualizing our generated data:
+sns.histplot(X, bins = 30, color = "green")
+plt.xlabel("Value of Draw")
+plt.ylabel("No. of Draws")
+plt.show()
+```
+
+Our log-likelihood function of $\mu$ and $\sigma^2$, conditional on our data $y$ is as follows:
+$$
+\ell(\theta|y) = \prod_{i = 1}^{n} \ln(f(y|\mu,\sigma^2)) = -\frac{n}{2} \ln(2\pi) - \frac{n}{2} \ln(\sigma^2) - \frac{1}{2\sigma^2} \sum_{i=1}^{n}(y_i-\mu)^2,
+$$
+We can write out the log-likelihood function of our data using our previously-simulated data:
+```{python}
+# Log-likelihood function for normal distribution
+def log_likelihood_normal(mu, sigma, X):
+    n = len(X)
+    term1 = (-n/2) * np.log(2 * np.pi)
+    term2 = (-n) * np.log(sigma)
+    term3 = (-1/(2 * sigma**2)) * np.sum((X - mu)**2)
+    return term1 + term2 + term3
+```
+
+In the following figure, I created a plot of the log-likelihood function of our randomly-generated data. We can see that the values of this function depend on different possible combinations of $\mu$ and $\sigma$. Additionally, from visual inspection of the function's surface in the figure, we can see that the log-likelihood function appears to peak when $\mu$ and $\sigma$ approaches around the true parameter value:
+
+```{python}
+import plotly.graph_objects as go
+
+mu_values = np.linspace(50, 140, 15)
+sigma_values = np.linspace(0, 150, 15)
+
+Mu, Sigma = np.meshgrid(mu_values, sigma_values)
+
+Z = np.array([[log_likelihood_normal(mu, sigma, X) for mu in mu_values] for sigma in sigma_values])
+
+fig = go.Figure(data=[go.Surface(z=Z, x=mu_values, y=sigma_values, colorscale="Viridis")])
+
+fig.update_layout(
+    scene=dict(
+        xaxis_title="µ (Mean)",
+        yaxis_title="σ (Standard Deviation)",
+        zaxis_title="Log-Likelihood",
+        camera=dict(eye=dict(x=-2, y=-2, z=1.5)) # Adjust the camera position
+    ),
+    title="Log-Likelihood Surface Plot",
+)
+
+fig.show()
+
+```
+
+```{python}
+# Compute the MLE estimates:
+mu_MLE = (1/len(X))*np.sum(X)
+sigma_MLE = np.sqrt((1/len(X))*np.sum((X-mu_MLE)**2))
+
+print(mu_MLE)
+print(sigma_MLE)
+```
+
+<!-- # Properties of Maximum Likelihood Estimator -->
+<!-- MLE is a popular estimation strategy due to its appealing asymptotic properties. However, the maximum likelihood estimator is only consistent, asymptotically normal, asymptotically efficient, and invariant to transformations when the required distributional assumptions holds and certain regularity conditions are met. Three regularity conditions, in particular, are required: -->
+
+<!-- 1. The first three derivatives of $\ln(f(y_i|\theta))$ w.r.t. $\theta$ are continuous and finite for almost all $y_i$ and for all $\theta$. -->
+<!-- 2. The conditions necessary to obtain the expectations of the first and second derivatives of $\ln(f(y_i|\theta))$ are met. -->
+<!-- 3. For all values of $\theta$, $|\frac{\partial^3\ln(f(y_i|\theta))}{\partial \theta_j\partial\theta_k\partial\theta_l}|$ is less than a function that has a finite expectation. -->
+
+<!-- When these conditions hold, we say that maximum likelihood estimator is consistent. That is, as our sample size grows to infinity, our estimates, $\hat\theta$, converges in probability to the true values $\theta$ -->
+<!-- $$ -->
+<!-- 	\hat{\theta} \xrightarrow[]{p}  \theta -->
+<!-- $$ -->
+
+<!-- Second, the asymptotic distribution of $\hat\theta$ is normal with a mean at the true parameter value $\theta$ and a variance: -->
+<!-- $$ -->
+<!-- \hat{\theta} \stackrel{s}{\sim} N(\theta, I(\theta)^{-1}), \text{ where } I(\theta) = -E_0\Big[\frac{\partial^2 \ell(\theta)}{\partial\theta\partial\theta'}\Big] -->
+<!-- $$ -->
+<!-- In other words, the asymptotic distribution is centered at the true parameter value, and we are more certain of the MLE when the likelihood function has more curvature. Additionally, MLE is asymptotically efficient, and achieves the Cram\'{e}r-Rao lower bound. This property tells us that no consistent estimator has a lower asymptotic variance than the maximum likelihood estimator: -->
+<!-- $$ -->
+<!-- 	Var(\hat\theta) = I(\theta)^{-1} -->
+<!-- $$ -->
+
+<!-- Lastly, the MLE is invariant to one-to-one-transformations of the parameter $\theta$. For example, as long as $c(\theta)$ is continuously differentiable, the maximum likelihood estimator of $\gamma_0 = c(\theta)$ is $\hat{\theta}$. -->
+
+<!-- # Variance of the Maximum Likelihood Estimator -->
+<!-- Recall the asymptotic variance of the maximum likelihood estimator: -->
+<!-- $$ -->
+<!-- Var(\hat\theta) = \left(-\mathbb{E}\Big[\frac{\partial^2 \ell(\theta)}{\partial\theta\partial\theta'}\Big]\right)^{-1} -->
+<!-- $$ -->
+
+<!-- The innermost term above is the **Hessian** of the log-likelihood function, w.r.t. the parameters. More specifically, this Hessian is a square matrix of second derivatives of the log-likelihood function w.r.t. all pairwise combinations of the parameters, and it describes the local curvature of our likelihood function of multiple variables: -->
+
+<!-- $$ -->
+<!-- 	\frac{\partial^2 \ell(\theta)}{\partial\theta\partial\theta'} = \begin{bmatrix} -->
+<!-- 		\frac{\partial^2 \ell(\theta)}{\partial\theta_1^2} & \frac{\partial^2 \ell(\theta)}{\partial\theta_1\partial\theta_2} & \ldots & \frac{\partial^2 \ell(\theta)}{\partial\theta_1\partial\theta_n}\\ -->
+<!-- 		\frac{\partial^2 \ell(\theta)}{\partial\theta_2\partial\theta_1} & \frac{\partial^2 \ell(\theta)}{\partial\theta_2^2} & \ldots & \frac{\partial^2 \ell(\theta)}{\partial\theta_2\partial\theta_n}\\ -->
+<!-- 		\vdots & \vdots & \ddots & \vdots \\ -->
+<!-- 		\frac{\partial^2 \ell(\theta)}{\partial\theta_n\partial\theta_1} & \frac{\partial^2 \ell(\theta)}{\partial\theta_n\partial\theta_2} & \ldots & \frac{\partial^2 \ell(\theta)}{\partial\theta_n^2} -->
+<!-- 	\end{bmatrix}, \text{ or more simply, } \textbf{H}_{ij} =  \frac{\partial^2 \ell(\theta)}{\partial\theta_i\partial\theta_j}. -->
+<!-- $$ -->
+
+<!-- Additionally, the Fisher information matrix measures the amount of information that our data contains about the unknown parameters that we estimate. This matrix is denoted as $I(\theta)$, and is equal to the negative expectation of the Hessian of the log-likelihood function: -->
+<!-- $$ -->
+<!-- 	I(\theta) = \mathbb{}\Big[ \frac{\partial\ell(\theta)}{\partial\theta} \frac{\partial\ell(\theta)}{\partial\theta'} \Big] = -\mathbb{E}\Big[\frac{\partial^2 \ell(\theta)}{\partial\theta\partial\theta'}\Big] -->
+<!-- $$ -->
+
+<!-- The asymptotic variance of the MLE is evaluated at the true parameter values. However, since we do not know what these values are, we need an estimator for the MLE variance-covariance matrix. There are multiple estimators for the variance-covariance matrix of a maximum likelihood estimate, though the empirical Hessian estimator is the most commonly used. -->
+
+

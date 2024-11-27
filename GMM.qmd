@@ -1,0 +1,134 @@
+---
+title: "Generalized Method of Moments"
+jupyter: python3
+html-math-method: mathml
+---
+
+The Generalized Method of Moments (GMM) is another common method used for estimating parameters in econometric models. Unlinke Maximum Likelihood Estimation, researchers do not need to make strong distributional assumptions of the underlying parameters. One strength of GMM estimation is that the econometrician can be agnostic to the distribution of the random variables in the data generating process.
+
+In short, GMM estimates the parameters of a model or DGP to make the model's moments as close as possible to the corresponding data moments. The key intuition behind GMM is that if we know the expected value of population moments, then the sample equivalents will, using the law of large numbers, converge to that expected value. That said, large data samples make GMM relatively more attractive than MLE because of the nice large sample properties of GMM and fewer required assumptions on the model.
+
+# Method of Moments
+Most of the estimators we've learned so far in econometrics, such as OLS, 2SLS, and MLE, are all special cases of the generalized method of moments. However, before we dive into GMM in more detail, it is worth discussing the method of moments estimator, a special case of GMM. 
+
+Method of moments and generalized method of moments estimation requires assumptions about only *moments* of the data. Recall that the definition of a **moment** is as follows:
+
+::: {.callout-note}
+## Definition
+Let $X$ be a random variable and $c \in \mathbb{R}$ some scalar. Then:
+$$
+k^{th} \text{ moment of } X = \mathbb{E}[X^k]
+$$
+Additionally, the $k^{th}$ moment of $X$ about $c$ is:
+$$
+= \mathbb{E}[(X-c)^k]
+$$
+:::
+
+Moments reveal several important aspects of a distribution. For example, the first to fourth moments tell us about a distribution's mean, variance, skewedness and kurtosis. In GMM estimation, we assume that we know *moment conditions* about the population from which our data are drawn. These moment conditions are functions of parameters and data *that equal zero in expectation* we evaluate them at the true parameter values. 
+
+Our moment conditions can come from a variety of different sources, such as the first-order conditions from consumers' utility maximization, instrumental variables, etc.
+
+## Method of Moments Estimator
+We now formally define the method of moments estimator. Consider some sample data $\{x,y,z\}$ is drawn from a population with $K$ moment conditions that are functions of $K$ parameters, $\theta$. Then,
+$$
+\mathbb{E}[m(y,x,z,\theta)] = 0,
+$$
+where $m(\cdot)$ is a vector of $K$ functions and $\theta$ is a vector of $K$ parameters. $y$ is our dependent variable, $x$ is a vector of independent variables, and $z$ is a vector of exogenous instruments.
+
+We will make some assumptions about the moment conditions of the population in which our data is drawn, but we do not need to make assumptions about the underlying distribution of our data.
+
+We never observe our full population, though our sample data is drawn from it. We can replace the population expectation with the sample analoge, the sample mean, to generate $K$ sample moments as a function of $K$ parameters:
+$$
+\frac{1}{n} \sum_{i=1}^{n} m(y_i, x_i, z_i, \theta) = 0
+$$
+This essentially leaves us a system of equations given by our moment conditions ($K$ equations). The method of moments estimators is the set of parameters $\hat\theta$ that solves this system of equations:
+$$
+\frac{1}{n} \sum_{i=1}^{n} m(y_i, x_i, z_i, \hat\theta) = 0
+$$
+In some cases, we will have a closed-form expression for $\hat\theta$ solved from simple algebraic manipulation, but in other instances we may need to obtain $\hat\theta$ by solving a minimization problem and use numerical optimization:
+$$
+\hat\theta = \arg\min_{\theta} Q(\theta),
+$$
+where our objective function $Q(\theta)$ is:
+$$
+Q(\theta) = \left[ \frac{1}{n} \sum_{i=1}^{n} m(y_i, x_i, z_i, \theta)\right]^T \left[\frac{1}{n} \sum_{i=1}^{n} m(y_i, x_i, z_i, \theta)\right]
+$$
+
+## OLS Regression as a Simple Example
+The ordinary least squares estimator can be seen as a particular case of the method of moments estimator. Consider a general OLS regression:
+$$
+y_i = \beta'x_i + \varepsilon_i,
+$$
+where $\beta$ is a vector of $K$ parameters and $x_i$ is a vector of $K$ variables. We also assume that $\varepsilon_i$, our error term, is **orthogonal** to our data $x_i$ such that $\mathbb{E}[x_i\varepsilon_i] = 0$. When we replace $\varepsilon_i = y_i - \beta'x_i$, we have our $K$ population moment conditions:
+$$
+\mathbb{E}[x_i(y_i - \beta'x_i)] = 0
+$$
+This gives us $K$ moment conditions which are functions of $K$ parameters (i.e., our $\beta$ vector). We will replace these with our sample analogs:
+$$
+\frac{1}{n}\sum_{i=1}^{n} x_i(y_i - \hat\beta'x_i) = 0
+$$
+Solving our $K$ equations yields the (familiar) method of moments estimator:
+$$
+\hat\beta_{OLS} = (X'X)^{-1}X'y
+$$
+
+# Generalized Method of Moments Estimator
+
+We now move on to the GMM estimator. In previous section we noted that the Method of Moments requires that the number of moment conditions is equal to the number of parameters. In GMM, we will allow for more moment conditions than the number of parameters. These additional conditions can come from our model, such as multiple instruments, parameters from supply and demand equations, etc.
+
+Let us start with some real-world data defined as $x$, a $N \times K$ matrix where we have $N$ observations as rows and $K$ variables as columns. Let $m(x)$ be an $L \times 1$ vector of moments from our data. Our data-generating process is defined as $F(x,\theta)$. $F$ represents a vector of equations that are functions of our $N \times K$ data matrix $x$ and our $K \times 1$ parameter vector, $\theta$. $m(x|\theta)$ is a vector of our $L$ moments from the model corresponding to our 
+
+We can say that we have $L$ moment conditions that are functions of $K$ parameters, $\theta$, such that $L \geq K$. Our $L$ moment conditions hold for the population in which our data is drawn:
+$$
+\mathbb{E}[m(y,x,z,\theta)] = 0,
+$$
+where the empirical moment is defined as:
+$$
+\frac{1}{n} \sum_{i=1}^{n} m(y_i, x_i, z_i, \theta) = 0
+$$
+Of course, we also have the case where our model is under-identified, where the number of moment conditions is less than the number of parameters. The consequence of this is straightforward: there will be multiple possible solutions. 
+
+In the case where $L > K$ and our moment conditions are not linear combinations of other moment conditions, our model is "over-identified": we cannot solve for $L$ unique sample moments. The generalized method of moments estimators is the set of parameters $\hat\theta$ that minimizes the weighted sum of squared sample moments:
+$$
+\hat\theta = \arg\min_{\theta} Q(\theta),
+$$
+where $Q(\theta)$ is:
+$$
+Q(\theta) = \left[ \frac{1}{n} \sum_{i=1}^{n} m(y_i, x_i, z_i, \theta)\right]^T W \left[\frac{1}{n} \sum_{i=1}^{n} m(y_i, x_i, z_i, \theta)\right],
+$$
+and $W$ is a special $L \times L$ **weighting matrix** that is positive definite.
+
+### The Identity Matrix as W
+When we set the weighting matrix to be the identity matrix, the criterion function $Q(\theta)$ becomes a simple sum of squared error functions such that each moment has the same weight.
+
+### Two-Step Variance-Covariance Estimator of W
+The most common method of estimating the weighting matrix for GMM estimates is the **two-step variance-covariance estimator**. The name "two-step" refers to the two steps used to get the weighting matrix.
+
+### Iterated Variance-Covariance Estimator of W
+
+### Newey-West Estimator of $\Omega$ and W
+
+## 2SLS as a Simple Example 
+The two-stage least squares estimator can be seen as a particular case of the generalized method of moments estimator. Consider a general regression model:
+$$
+y_i = \beta'x_i + \varepsilon_i,
+$$
+where $\beta$ is a vector of $K$ parameters and $x_i$ is a vector of $K$ variables, where some variables are endogenous. We have a vector of $L$ instruments that are correlated with $x_i$ but orthogonal to $\varepsilon_i$, our error term:
+
+$$
+\mathbb{E}[z_i\varepsilon_i] = 0
+$$
+
+When we replace $\varepsilon_i = y_i - \beta'x_i$ to obtain our $L$ population moment conditions we have:
+$$
+\mathbb{E}[z_i(y_i - \beta'x_i)] = 0
+$$
+Since we have $L$ moment conditions and only $K$ parameters, we must find the set of parameters hat minimizes the
+weighted sum of squared sample moments:
+
+$$
+Q(\beta) = \left[ \frac{1}{n} \sum_{i=1}^{n} z_i(y_i - \beta'x_i)\right]^T W \left[\frac{1}{n} \sum_{i=1}^{n} z_i(y_i - \beta'x_i)\right],
+$$
+
+

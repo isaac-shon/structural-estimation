@@ -1,0 +1,21 @@
+---
+title: "Structural Estimation"
+jupyter: python3
+---
+
+# Introduction
+
+In economics, all empirical work can be classified as being either (1) descriptive or (2) structural. As one may have learned in previous econometrics courses, the overarching goal in conducting descriptive empirical work is to characterize relationships between observable data, establish certain stylized facts about data, as well as suggest some relationships. On the other hand, structural empirical work differs in that it aims to quantify certain features of an assumed data-generating process (i.e., structure) which allow researchers to unpack causal relationships and answer different types of counterfactual questions. The goal of this brief manuscript is to introduce the reader to how structural estimation is conducted in empirical economics. Simply put, structural estimation is a particular methodological approach explicitly based on economic theory, in which the objective is to estimate a specified economic model that is broadly consistent with observed data. 
+
+A good place to start our discussion of structural estimation is the definition of a "*model*". At its essence, a model is a set of mathematical cause and effect relationships, often specified with parameters $\theta$ and data $x$ or $(x,y)$ that help us understand, predict, and explain some phenomena. We can broadly specify a model as:
+$$
+g(x,\theta) = 0 \text{ or } y =g(x, \theta),
+$$
+
+where the $g(.)$ can represent a function or vector of functions that represents the mathematical relationships between the variables and parameters. Some of the inputs in a model can be either exogenous or endogenous variables. We define **exogenous variables** to be those inputs in our model that are taken as given, or from "outside" the model. On the other hand, **endogenous variables** are outputs of a model or variables that are dependent on exogenous variables. While this may include portions of our inputs $x$, it can also include our output $y$.
+
+Given this definition of a model, let us now establish a working definition for a "structural" model. A structural model in economics is a model in which the mathematical relationships among variables and parameters are derived from the optimization of individuals, firms, or other organizations (i.e., behavioral equations). They can include linear models and linear approximations, but often include nonlinear and dynamic models. Closely related to structural models are reduced-form models, which is obtained by solving the relevant structural model for each endogenous variable as a function of the exogenous observables and structural errors (e.g., $y = f(X, Z, U)$). In other words, reduced-form are a functional or stochastic mapping in which the inputs are (1) exogenous variables and (2) unobservables ("structural errors"), and the outputs are endogenous variables.
+
+## Steps to Conducting Structural Empirical Work
+A requirement of structural estimation is that economic modeling, estimation, and empirical analysis be internally consistent. The overall objective of structural estimation is to estimate an explicitly specified economic model that is broadly consistent with observed data (TKTKTK). In doing so, several important steps are made: (1) model selection/development, (2) identification and estimation, and (3) policy analysis.
+
